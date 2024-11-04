@@ -96,6 +96,51 @@ def model_block4Unfreze(model_dir):
 
 
 
+def model_block4TOblock7Unfreze(model_dir):
+    model = load_model(model_dir)
+    input_shape = (model.input_shape[1][1], model.input_shape[1][2], model.input_shape[1][3])
+    print('This is the number of trainable layers '
+          'before freezing the conv base:', len(model.layers[5].trainable_weights))
+    layers = model.layers[5].layers
+    for innerlayer in layers:
+        if any(innerlayer.name.startswith(block) for block in ["block4", "block5", "block6", "block7"]):
+            innerlayer.trainable = True
+        else:
+            innerlayer.trainable = False  # Optional: freeze other layers
+    ## Unfreeze FC layer
+    fc_layer = model.get_layer("prediction_layer")
+    fc_layer.trainable = True
+    
+    print('This is the number of trainable layers '
+          'after freezing the block5a_se_excite Layer:', len(model.layers[5].trainable_weights))
+
+    return input_shape, model
+
+
+
+def model_block1TOblock4Unfreze(model_dir):
+    model = load_model(model_dir)
+    input_shape = (model.input_shape[1][1], model.input_shape[1][2], model.input_shape[1][3])
+    print('This is the number of trainable layers '
+          'before freezing the conv base:', len(model.layers[5].trainable_weights))
+    layers = model.layers[5].layers
+    for innerlayer in layers:
+        if any(innerlayer.name.startswith(block) for block in ["block1", "block2", "block3", "block4"]):
+            innerlayer.trainable = True
+        else:
+            innerlayer.trainable = False  # Optional: freeze other layers
+    ## Unfreeze FC layer
+    fc_layer = model.get_layer("prediction_layer")
+    fc_layer.trainable = True
+    
+    print('This is the number of trainable layers '
+          'after freezing the block5a_se_excite Layer:', len(model.layers[5].trainable_weights))
+
+    return input_shape, model
+
+
+
+
 
 
 
