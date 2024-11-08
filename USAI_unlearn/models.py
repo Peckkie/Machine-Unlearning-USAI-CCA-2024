@@ -27,8 +27,8 @@ def loadmodelUnlearn(path_model):
     efficientnet_b5_layer = old_model.get_layer('efficientnet-b5')  # ดึงเฉพาะ EfficientNet-B5
     efficientnet_b5_layer.trainable =  False #True  # สามารถเลือกให้ฝึกต่อได้ หรือจะ freeze ก็ได้
     # Step 3: สร้าง input layer ใหม่ที่มีขนาด (456, 456, 3)
-    new_input = Input(shape=(456, 456, 3), name='new_input')
     height=width = 456
+    new_input = Input(shape=(height, width, 3), name='new_input')
     input_shape = (height, width, 3)
     # Step 4: ต่อเลเยอร์ EfficientNet-B5 เข้ากับ input ใหม่
     x = efficientnet_b5_layer(new_input)
@@ -45,8 +45,12 @@ def loadmodelUnlearn(path_model):
     print('This is the number of trainable layers '
           'before freezing the conv base:', len(new_model.trainable_weights))
     #conv_base.trainable = False  # freeze เพื่อรักษา convolutional base's weight
-    for layer in new_model.layers:
-        layer.trainable = False
+    layers = new_model.layers[1].layers
+    for innerlayer in layers:
+        innerlayer.trainable = False
+    ### Ensure to Unfreeze FC layer
+    fc_layer = new_model.get_layer("prediction_layer")
+    fc_layer.trainable = True
     print('This is the number of trainable layers '
           'after freezing the conv base:', len(new_model.trainable_weights))
 
@@ -62,7 +66,7 @@ def finetuneUSAI_B4(path_modelJson, path_modelweights):
     #load weights into new model  -------------------
     model.load_weights(path_modelweights)
     print("Loaded model from disk")
-    input_shape = (model.input_shape[1][1], model.input_shape[1][2], model.input_shape[1][3])
+    input_shape = (model.input_shape[1], model.input_shape[2], model.input_shape[3])
     ### Unfreeze Block4 
     print('This is the number of trainable layers '
           'before freezing the conv base:', len(model.layers[1].trainable_weights))
@@ -87,7 +91,6 @@ def build_EffNetmodelB5(fine_tune, Numclasses):
     :param fine_tune (bool): Whether to train the hidden layers or not.
     :Numclasses == 15 AB ==> SubClass New 
     """
-    
     height = width = 456
     input_shape = (height, width, 3)
     # loading pretrained conv base model
@@ -115,8 +118,15 @@ def build_EffNetmodelB5(fine_tune, Numclasses):
     return input_shape, model
 
 
-def model_block5Unfreze(path_model):
-    model = load_model(path_model)
+def model_block5Unfreze(path_modelJson, path_modelweights):
+    ##load json and create model --------------------
+    json_file = open(path_modelJson, 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    model = model_from_json(loaded_model_json)
+    #load weights into new model  -------------------
+    model.load_weights(path_modelweights)
+    #get input shape
     height = width = model.input_shape[1]
     input_shape = (height, width, 3)
     print('This is the number of trainable layers '

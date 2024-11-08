@@ -118,7 +118,7 @@ def main():
             input_shape, model = build_EffNetmodelB5(fine_tune=True, Numclasses=15)
         elif args.R == 2 and args.name == "Block5a_se_excite" :
             print("[INFO]: Load EffNetB5 Model to Finetune Stage: Unfreeze Block5a_se_excite Layer")
-            input_shape, model = model_block5Unfreze(args.checkpoint_dir)
+            input_shape, model = model_block5Unfreze(args.Modeljson_dir, args.checkpoint_dir)
     ##get images size 
     IMAGE_SIZE = input_shape[0]
     model.summary()
