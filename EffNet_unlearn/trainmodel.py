@@ -14,6 +14,7 @@ from keras import models
 from tensorflow.keras import optimizers
 from keras.optimizers import Adam
 from model import build_modelB5_unlearn, loadresumemodel, model_block4Unfreze, model_block4TOblock7Unfreze, model_block1TOblock4Unfreze
+from model import model_block5a_se_excite_Unfreze
 from data_generator import batch_datagen, Flip_generator
 #load Check point
 from tensorflow.keras.models import load_model
@@ -47,7 +48,7 @@ def main():
     #my_parser.add_argument('--data', type=str, default='mini-ImageNet')
     my_parser.add_argument('--data_path', type=str, default='/home/kannika/codes_AI/CSV/mini-ImageNet_MachineUnlearn.csv')
     my_parser.add_argument('--save_dir', type=str, help='Main Output Path', default="/media/HDD/mini-ImageNet/EffNetB5Model_unlearn")
-    my_parser.add_argument('--name', type=str, default=".", help='[transfer, unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4 ]')
+    my_parser.add_argument('--name', type=str, default=".", help='[transfer, unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4, unfreezeB5a_se_excite]')
     my_parser.add_argument('--R', type=int, help='[1:R1, 2:R2]')
     my_parser.add_argument('--lr', type=float, default=1e-5)
     my_parser.add_argument('--batchsize', type=int, default=16)
@@ -94,6 +95,9 @@ def main():
     elif args.R == 2 and args.name == "unfreezeB1-B4" :
         print("[INFO]: Load Model to Finetune Stage: Train Primary to the Middle Layers and Fully Connected Layer, and Leave Others Frozen")
         input_shape, model = model_block1TOblock4Unfreze(args.checkpoint_dir)
+    elif args.R == 2 and args.name == "unfreezeB5a_se_excite" :
+        print("[INFO]: Load Model to Finetune Stage: Train Primary to the Block5a Layers and Fully Connected Layer, and Leave Others Frozen")
+        input_shape, model = model_block5a_se_excite_Unfreze(args.checkpoint_dir)
     elif args.resume and args.R == 2:
         input_shape, model = loadresumemodel(args.checkpoint_dir)
         print(" ==================================== [INFO]: Resume Model to Finetune Stage ====================================")
