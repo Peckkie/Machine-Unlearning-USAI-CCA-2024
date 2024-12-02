@@ -143,7 +143,7 @@ def main():
     os.makedirs(root_Metrics, exist_ok=True)
     class Metrics(Callback):
             def on_epoch_end(self, epochs, logs={}):
-                if epochs%50 == 0 and epochs != 0:
+                if epochs%20 == 0 and epochs != 0:
                     self.model.save(f'{root_Metrics}{on_epochName}_epoch{epochs}.h5')
                     # Save the weights
                     #self.model.save_weights(f'{checkpointerdir}/my_checkpoint_epoch-{epochs}/cp_modelEffNetB5_Unlearning_{args.name}_{_R}_epoch{epochs}')
