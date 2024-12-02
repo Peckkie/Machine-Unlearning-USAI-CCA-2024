@@ -12,7 +12,7 @@ from keras.utils import generic_utils
 from keras import layers
 from keras import models
 from tensorflow.keras import optimizers
-from models import loadresumemodel, loadmodelUnlearn, finetuneUSAI_B4, build_EffNetmodelB5, model_block5Unfreze
+from models import loadresumemodel, loadmodelUnlearn, finetuneUSAI_B4, build_EffNetmodelB5, model_block5Unfreze, finetuneUSAI_B4ToB7
 from data_loader import Data_generator
 #from efficientnet.keras import EfficientNetB5 as Net
 #load Check point
@@ -96,17 +96,23 @@ def main():
     epochs = args.epochs
     
     if args.set == "ML-unlearn": 
-        root_base = f'{save_dir}/{_R}/{args.name}'
+        root_base = f'{save_dir}/{args.set}/{_R}/{args.name}'
         os.makedirs(root_base, exist_ok=True)
         ## Create Model
         if args.resume :
             input_shape, model = loadresumemodel(args.checkpoint_dir)
         elif args.R == 1 and args.name == "unfreezeB4" :
             print("[INFO]: Load ML Unlearn unfreezeB4 Model to Finetune Stage: Unfreeze FC Layers")
-            input_shape, model = finetuneUSAI_B4(args.Modeljson_dir, args.checkpoint_dir)
+            input_shape, model = loadmodelUnlearn(args.checkpoint_dir)
         elif args.R == 2 and args.name == "unfreezeB4" :
             print("[INFO]: Load ML Unlearn unfreezeB4 Model to Finetune Stage: Unfreeze Block4")
             input_shape, model = finetuneUSAI_B4(args.Modeljson_dir, args.checkpoint_dir)
+        elif args.R == 1 and args.name == "unfreezeB4-B7" :
+            print("[INFO]: Load ML Unlearn unfreezeB4-B7 Model to Finetune Stage: Unfreeze FC Layers")
+            input_shape, model = loadmodelUnlearn(args.checkpoint_dir)
+        elif args.R == 2 and args.name == "unfreezeB4-B7" :
+            print("[INFO]: Load ML Unlearn unfreezeB4-B7 Model to Finetune Stage: Unfreeze Block4 to Block7")
+            input_shape, model = finetuneUSAI_B4ToB7(args.Modeljson_dir, args.checkpoint_dir)
     elif args.set == "EffNet-base": 
         root_base = f'{save_dir}/{_R}'
         os.makedirs(root_base, exist_ok=True)
