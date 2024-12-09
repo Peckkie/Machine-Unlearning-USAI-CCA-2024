@@ -12,7 +12,7 @@ from keras.utils import generic_utils
 from keras import layers
 from keras import models
 from tensorflow.keras import optimizers
-from models import loadresumemodel, loadmodelUnlearn, finetuneUSAI_B4, build_EffNetmodelB5, model_block5Unfreze, finetuneUSAI_B4ToB7
+from models import loadresumemodel, loadmodelUnlearn, finetuneUSAI_B4, build_EffNetmodelB5, model_block5Unfreze, finetuneUSAI_B4ToB7, finetuneUSAI_B1ToB4, finetuneUSAI_B5ToB7
 from data_loader import Data_generator
 #from efficientnet.keras import EfficientNetB5 as Net
 #load Check point
@@ -66,8 +66,9 @@ def main():
     my_parser.add_argument('--gpu', type=int, default=1, help='Number GPU 0,1')
     my_parser.add_argument('--set', type=str, default='ML-unlearn', help='[ML-unlearn, EffNet-base]')
     my_parser.add_argument('--data_path', type=str, default='/media/tohn/HDD/VISION_dataset/')
+    my_parser.add_argument('--data', type=str, default='balanced', help='[balanced, unbalanced]')
     my_parser.add_argument('--save_dir', type=str, help='Main Output Path', default="/media/tohn/HDD/Model_unlearn/Models_USAI")
-    my_parser.add_argument('--name', type=str, default=".", help='[transfer, unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4, Block5a_se_excite]')
+    my_parser.add_argument('--name', type=str, default=".", help='[transfer, unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4, unfreezeBlock5a_se_excite]')
     my_parser.add_argument('--R', type=int, help='[1:R1, 2:R2]')
     my_parser.add_argument('--lr', type=float, default=2e-5)
     my_parser.add_argument('--batchsize', type=int, default=16)
@@ -91,7 +92,7 @@ def main():
     ## get my_parser
     save_dir = args.save_dir
     R = args.R
-    _R = f'R{R}'
+    _R = f'R{R}_{args.data}'
     ## train seting
     epochs = args.epochs
     
@@ -113,6 +114,18 @@ def main():
         elif args.R == 2 and args.name == "unfreezeB4-B7" :
             print("[INFO]: Load ML Unlearn unfreezeB4-B7 Model to Finetune Stage: Unfreeze Block4 to Block7")
             input_shape, model = finetuneUSAI_B4ToB7(args.Modeljson_dir, args.checkpoint_dir)
+        elif args.R == 1 and args.name == "unfreezeB1-B4" :
+            print("[INFO]: Load ML Unlearn unfreezeB1-B1 Model to Finetune Stage: Unfreeze FC Layers")
+            input_shape, model = loadmodelUnlearn(args.checkpoint_dir)
+        elif args.R == 2 and args.name == "unfreezeB1-B4" :
+            print("[INFO]: Load ML Unlearn unfreezeB1-B4 Model to Finetune Stage: Unfreeze Block1 to Block4")
+            input_shape, model = finetuneUSAI_B1ToB4(args.Modeljson_dir, args.checkpoint_dir)
+        elif args.R == 1 and args.name == "unfreezeBlock5a_se_excite" :
+            print("[INFO]: Load ML Unlearn unfreeze Block5a_se_excite-Block7 Model to Finetune Stage: Unfreeze FC Layers")
+            input_shape, model = loadmodelUnlearn(args.checkpoint_dir)
+        elif args.R == 2 and args.name == "unfreezeBlock5a_se_excite" :
+            print("[INFO]: Load ML Unlearn unfreezeB5-B7 Model to Finetune Stage: Unfreeze Block5a_se_excite to Block7")
+            input_shape, model = finetuneUSAI_B5ToB7(args.Modeljson_dir, args.checkpoint_dir)
     elif args.set == "EffNet-base": 
         root_base = f'{save_dir}/{_R}'
         os.makedirs(root_base, exist_ok=True)
@@ -131,7 +144,7 @@ def main():
     print('='*100)
     
     ## import dataset
-    dataframe = pd.read_csv(f'{args.data_path}/Traindf_fold4_8_v1.csv')
+    dataframe = pd.read_csv(f'{args.data_path}/Traindf_fold4_8_v1_Balance_classes.csv')
     #validation
     valframe = pd.read_csv(f'{args.data_path}/Valdf_fold3_v1.csv')
     ### Get data Loader  ## input_shape ==> (456, 456, 3)

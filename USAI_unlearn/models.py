@@ -173,6 +173,68 @@ def finetuneUSAI_B4ToB7(path_modelJson, path_modelweights):
           'after freezing the block5a_se_excite Layer:', len(model.layers[1].trainable_weights))
     
     return input_shape, model   
+
+
+def finetuneUSAI_B1ToB4(path_modelJson, path_modelweights):
+    ##load json and create model --------------------
+    json_file = open(path_modelJson, 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    model = model_from_json(loaded_model_json)
+    #load weights into new model  -------------------
+    model.load_weights(path_modelweights)
+    print("Loaded model from disk")
+    input_shape = (model.input_shape[1], model.input_shape[2], model.input_shape[3])
+    ### Unfreeze Block4 
+    print('This is the number of trainable layers '
+          'before freezing the conv base:', len(model.layers[1].trainable_weights))
+    layers = model.layers[1].layers
+    for innerlayer in layers:
+        if any(innerlayer.name.startswith(block) for block in ["block1", "block2", "block3", "block4"]):
+            innerlayer.trainable = True
+        else:
+            innerlayer.trainable = False  # Optional: freeze other layers
+    ## Unfreeze FC layer
+    fc_layer = model.get_layer("prediction_layer")
+    fc_layer.trainable = True
+
+    print('This is the number of trainable layers '
+          'after freezing the block5a_se_excite Layer:', len(model.layers[1].trainable_weights))
+    
+    return input_shape, model   
+
+
+def finetuneUSAI_B5ToB7(path_modelJson, path_modelweights):
+    ##load json and create model --------------------
+    json_file = open(path_modelJson, 'r')
+    loaded_model_json = json_file.read()
+    json_file.close()
+    model = model_from_json(loaded_model_json)
+    #load weights into new model  -------------------
+    model.load_weights(path_modelweights)
+    print("Loaded model from disk")
+    input_shape = (model.input_shape[1], model.input_shape[2], model.input_shape[3])
+    ### Unfreeze Block4 
+    print('This is the number of trainable layers '
+          'before freezing the conv base:', len(model.layers[1].trainable_weights))
+    layers = model.layers[1].layers
+    ## Set efficientnet-b5 to Unfreeze
+    model.layers[1].trainable = True
+    set_trainable = False
+    for innerlayer in layers:
+        if innerlayer.name == 'block5a_se_excite':
+            set_trainable = True
+        if set_trainable:
+            innerlayer.trainable = True
+        else:
+            innerlayer.trainable = False
+    ## Unfreeze FC layer
+    fc_layer = model.get_layer("prediction_layer")
+    fc_layer.trainable = True
+    print('This is the number of trainable layers '
+          'after freezing the block5a_se_excite Layer:', len(model.layers[1].trainable_weights))
+    
+    return input_shape, model   
     
     
     
