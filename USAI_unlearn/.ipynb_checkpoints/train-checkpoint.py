@@ -40,7 +40,7 @@ class Metrics(Callback):
         if logs is None:
             logs = {}
         # Check if this is a checkpoint epoch (every 50 epochs)
-        if epochs % 20 == 0 and epochs != 0:
+        if epochs % 50 == 0 and epochs != 0:
             # Save model, weights, and JSON at the checkpoint epoch
             self.model.save(f'{self.root_metrics}{self.on_epoch_name}_epoch{epochs}.h5')
             self.model.save_weights(f'{self.root_metrics}{self.on_epoch_name}_epoch{epochs}.weights.h5')
@@ -68,15 +68,14 @@ def main():
     my_parser.add_argument('--epochs', type=int, default=200, help='number of epochs to train our network for')
     my_parser.add_argument('--gpu', type=int, default=1, help='Number GPU 0,1')
     my_parser.add_argument('--network_name', type=str, default='ResNet152v2', help='[ResNet152v2, EffNetB5]')
-    my_parser.add_argument('--set', type=str, default='MLunlearn_USAI', help='In this work, For finetuning with USAI 15 AB [MLunlearn_USAI, MLorigin_USAI]')
-    my_parser.add_argument('--data_path', type=str, default='/media/tohn/HDD/VISION_dataset')
+    my_parser.add_argument('--set', type=str, default='MLorigin_USAI', help='In this work, For finetuning with USAI 15 AB [MLunlearn_USAI, MLorigin_USAI]')
+    my_parser.add_argument('--data_path', type=str, default='/home/kannika/codes_AI/CSV')
     my_parser.add_argument('--data', type=str, default='balanced', help='[balanced, unbalanced]')
-    my_parser.add_argument('--save_dir', type=str, default="/media/tohn/HDD2/Model_unlearn", help='Main Output Path >> [/media/tohn/HDD2/Model_unlearn/{network_name}Model]')
-    my_parser.add_argument('--imgsize', type=int, default=456, help='[EffNetB5: 456, ResNet152v2: 224]')
-    my_parser.add_argument('--name', type=str, default=".", help='EffNetB5: [transfer, unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4, unfreezeBlock5a_se_excite], ResNet152v2: [transfer, unfreeze_conv3_block, unfreeze_conv3_block-conv5_block, unfreeze_conv1-conv3_block]')
-    my_parser.add_argument('--exp', type=str, default=".", help='Only during Train R1: EffNetB5: [unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4, unfreezeBlock5a_se_excite], ResNet152v2: [unfreeze_conv3_block, unfreeze_conv3_block-conv5_block, unfreeze_conv1-conv3_block]')
+    my_parser.add_argument('--save_dir', type=str, default="/media/HDD/mini-ImageNet", help='Main Output Path >> [/media/HDD/mini-ImageNet/{network_name}Model]')
+    my_parser.add_argument('--imgsize', type=int, default=224, help='[EffNetB5: 456, ResNet152v2: 224]')
+    my_parser.add_argument('--name', type=str, default=".", help='EffNetB5: [transfer, unfreezeB4, unfreezeB1-B4, unfreezeB4-B7, unfreezeB1-B4, unfreezeBlock5a_se_excite], ResNet152v2: [transfer, unfreeze_conv3_block, unfreeze_conv1-conv3_block, unfreeze_conv3_block-conv5_block]')
     my_parser.add_argument('--R', type=int, help='[1:R1, 2:R2]')
-    my_parser.add_argument('--lr', type=float, default=2e-5)
+    my_parser.add_argument('--lr', type=float, default=1e-5)
     my_parser.add_argument('--batchsize', type=int, default=16)
     my_parser.add_argument('--resume', action='store_true')
     my_parser.add_argument('--checkpoint_dir', type=str ,default=".")
@@ -97,7 +96,7 @@ def main():
     
     ## Create Model
     input_shape, model = utils_createModel(network_name=args.network_name, sets=args.set, resume=args.resume, R=args.R, 
-                                               name=args.name, exp=args.exp, checkpoint_dir=args.checkpoint_dir, 
+                                               name=args.name, checkpoint_dir=args.checkpoint_dir, 
                                                    Modeljson_dir=args.Modeljson_dir, imgsize=args.imgsize)       
     ## get images size 
     IMAGE_SIZE = input_shape[0]
@@ -119,13 +118,7 @@ def main():
     
     ## Create Main Output Path
     _R = f"R{args.R}"
-    if args.set == "MLunlearn_USAI":
-        if args.R == 1:
-            root_base = f'{args.save_dir}/{args.network_name}Model/{args.set}/{_R}_{args.data}/{args.name}_exp_{args.exp}'
-        elif args.R == 2:
-            root_base = f'{args.save_dir}/{args.network_name}Model/{args.set}/{_R}_{args.data}/{args.name}/exp_{args.exp}'
-    elif args.set == "MLorigin_USAI":
-        root_base = f'{args.save_dir}/{args.network_name}Model/{args.set}/{_R}_{args.data}/{args.name}'    
+    root_base = f'{args.save_dir}/{args.network_name}Model/{args.set}/{_R}_{args.data}/{args.name}'
     os.makedirs(root_base, exist_ok=True)
     ## Set mkdir TensorBoard 
     root_logdir = f"{root_base}/{args.tensorName}"
@@ -138,14 +131,9 @@ def main():
     modelNamemkdir = f"{root_base}/{args.FmodelsName}"
     os.makedirs(modelNamemkdir, exist_ok=True)
     ## Set Model Name 
-    if args.set == "MLunlearn_USAI":
-        modelName = f'model{args.network_name}_{args.set}_{args.name}_exp_{args.exp}-{_R}_{args.data}.h5'
-        ## Set check point Name
-        on_epochName = f'model{args.network_name}_{args.set}_{args.name}_exp_{args.exp}-{_R}_{args.data}'
-    elif args.set == "MLorigin_USAI":
-        modelName = f'model{args.network_name}_{args.set}_{args.name}-{_R}_{args.data}.h5'
-        ## Set check point Name
-        on_epochName = f'model{args.network_name}_{args.set}_{args.name}-{_R}_{args.data}'
+    modelName = f'model{args.network_name}_{args.set}_{args.name}-{_R}_{args.data}.h5'
+    ## Set check point Name
+    on_epochName = f'model{args.network_name}_{args.set}_{args.name}-{_R}_{args.data}'
     ## Create save epoch end folder 
     Model2save = f'{modelNamemkdir}/{modelName}'
     root_Metrics = f'{root_base}/{args.epochendName}/'
